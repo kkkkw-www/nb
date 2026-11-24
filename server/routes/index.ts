@@ -1,6 +1,9 @@
 import type { Application } from '@nocobase/app-server/application';
 import type { AppRouteContribution } from '@nocobase/app-server/router';
+import releaseAppsRoutes from './release-apps.js';
 
-const routes: readonly AppRouteContribution<Application>[] = [];
+const routes: readonly AppRouteContribution<Application>[] = [
+  releaseAppsRoutes,
+];
 
 export default routes;

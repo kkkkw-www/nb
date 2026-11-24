@@ -7,4 +7,8 @@ import type { PagePermissionTitles } from './page-permissions.js';
 export const pagePermissionTitles: PagePermissionTitles = {
   // The template detail drawer shares the list page grant.
   notificationTemplate: 'settings.notificationTemplates',
+  // The Agents plugin's overlay and child pages have no navigation or breadcrumb title of their own.
+  'runtimes-connect': 'agentManagement.connectRuntime',
+  'skills-new': 'agentManagement.newSkill',
+  'skills-detail': 'agentManagement.skillDetail',
 };

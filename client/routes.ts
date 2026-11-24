@@ -1,9 +1,12 @@
 import databaseExplorerRoutes from './pages/settings/database-explorer/routes.js';
+import agentsManagementRoutes from './pages/agents/routes.js';
 import { createAppClientConfig } from '@nocobase/app-client';
 import { readAppClientRuntimeConfig } from '@nocobase/app-client/runtime';
 import { includeNotificationTemplateRoutes } from './pages/settings/notification-routes.js';
+import releaseAppsRoutes from './pages/settings/release-apps/routes.js';
 import { Home } from 'lucide-react';
 import settingsShellRoutes from './pages/settings/shell-routes.js';
+import systemSettingsRoutes from './pages/settings/routes.js';
 import {
   defineAppRoutes,
   type AppClientRouteContribution,
@@ -76,7 +79,14 @@ export function createApplicationRoutes(
 ): readonly AppClientRouteContribution[] {
   const config = createAppClientConfig({ rawConfig });
   return includeNotificationTemplateRoutes(
-    [appRoutes, settingsShellRoutes, databaseExplorerRoutes],
+    [
+      appRoutes,
+      settingsShellRoutes,
+      systemSettingsRoutes,
+      releaseAppsRoutes,
+      databaseExplorerRoutes,
+      agentsManagementRoutes,
+    ],
     config.get<boolean>('notificationTemplates.invitationConfigured') === true,
   );
 }
