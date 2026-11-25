@@ -13,6 +13,7 @@ import {
   apiErrorResponses,
   apiValidator,
   dataResponse,
+  listResponse,
   defineApiRoutes,
   describeRoute,
   executeIdempotentMutation,
@@ -34,6 +35,48 @@ const states = z.enum([
   'released',
   'failed',
 ]);
+const requestSchema = z.object({
+  id: z.string(),
+  appId: z.string(),
+  appName: z.string(),
+  status: states,
+  applicantId: z.string(),
+  applicantName: z.string(),
+  appliedAt: z.string(),
+  description: z.string(),
+  reviewerId: z.string().nullable(),
+  reviewerName: z.string().nullable(),
+  reviewedAt: z.string().nullable(),
+  reviewResult: z.enum(['approved', 'rejected']).nullable(),
+  reviewNote: z.string().nullable(),
+  registrarId: z.string().nullable(),
+  registrarName: z.string().nullable(),
+  registeredAt: z.string().nullable(),
+  releasedAt: z.string().nullable(),
+  releaseNote: z.string().nullable(),
+  lifecycleVersion: z.number(),
+  statusChangedAt: z.string(),
+});
+const detailSchema = z.object({
+  record: requestSchema,
+  history: z.object({
+    transitions: z.array(
+      z.object({
+        id: z.string(),
+        lifecycle: z.string(),
+        recordId: z.string(),
+        transition: z.string(),
+        from: z.string().nullable(),
+        to: z.string(),
+        actorId: z.string(),
+        input: z.record(z.string(), z.unknown()),
+        at: z.string(),
+        version: z.number(),
+        requestId: z.string().nullable(),
+      }),
+    ),
+  }),
+});
 const listQuery = z.object({
   appId: z.string().max(64).optional(),
   status: states.optional(),
@@ -94,7 +137,7 @@ export default defineApiRoutes<Application>((app) => {
     describeRoute({
       tags: ['Release requests'],
       summary: 'List release requests',
-      responses: response,
+      responses: { 200: listResponse(requestSchema), ...apiErrorResponses },
     }),
     apiValidator('query', listQuery),
     async (c) => {
@@ -160,7 +203,7 @@ export default defineApiRoutes<Application>((app) => {
     describeRoute({
       tags: ['Release requests'],
       summary: 'Submit a release request',
-      responses: { 201: dataResponse(z.unknown()), ...apiErrorResponses },
+      responses: { 201: dataResponse(requestSchema), ...apiErrorResponses },
     }),
     apiValidator('header', header),
     apiValidator('json', create),
@@ -193,7 +236,7 @@ export default defineApiRoutes<Application>((app) => {
     describeRoute({
       tags: ['Release requests'],
       summary: 'Get request and history',
-      responses: response,
+      responses: { 200: dataResponse(detailSchema), ...apiErrorResponses },
     }),
     apiValidator('param', id),
     async (c) => {
@@ -209,7 +252,7 @@ export default defineApiRoutes<Application>((app) => {
     describeRoute({
       tags: ['Release requests'],
       summary: 'Review or register a release result',
-      responses: response,
+      responses: { 200: dataResponse(requestSchema), ...apiErrorResponses },
     }),
     apiValidator('param', id),
     apiValidator('header', header),
@@ -271,7 +314,7 @@ export default defineApiRoutes<Application>((app) => {
     describeRoute({
       tags: ['Release workflows'],
       summary: 'List release executions',
-      responses: response,
+      responses: { 200: listResponse(requestSchema), ...apiErrorResponses },
     }),
     apiValidator('query', listQuery),
     async (c) => {
@@ -296,7 +339,7 @@ export default defineApiRoutes<Application>((app) => {
     describeRoute({
       tags: ['Release workflows'],
       summary: 'Get release execution history',
-      responses: response,
+      responses: { 200: dataResponse(detailSchema), ...apiErrorResponses },
     }),
     apiValidator('param', id),
     async (c) => {
