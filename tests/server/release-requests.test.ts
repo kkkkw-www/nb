@@ -87,6 +87,17 @@ test('release lifecycle keeps review and actual release distinct, rejects duplic
   expect(row.applicantId).toBeTruthy();
   expect(row.appliedAt).toBeTruthy();
   expect(row.activeAppId).toBeUndefined();
+  for (const path of [
+    '/releaseRequests?page=1&pageSize=20',
+    `/releaseRequests?appId=${app.id}&status=pending`,
+    '/releaseWorkflows/executions?page=1&pageSize=20',
+  ]) {
+    const list = await admin.fetch(path);
+    expect(list.status).toBe(200);
+    expect((await list.json()).data).toContainEqual(
+      expect.objectContaining({ id: row.id }),
+    );
+  }
   const replay = await admin.fetch('/releaseRequests', json(create, key));
   expect(replay.status).toBe(201);
   expect(replay.headers.get('Idempotency-Replayed')).toBe('true');

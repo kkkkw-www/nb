@@ -109,10 +109,11 @@ export class ReleaseRequestsService {
   }) {
     const repository =
       this.database.repository<ReleaseRequest>('releaseRequests');
-    const filter = {
+    const fields = {
       ...(query.appId ? { appId: query.appId } : {}),
       ...(query.status ? { status: query.status } : {}),
     };
+    const filter = Object.keys(fields).length ? fields : undefined;
     const [rows, total] = await Promise.all([
       repository.findMany({
         filter,
