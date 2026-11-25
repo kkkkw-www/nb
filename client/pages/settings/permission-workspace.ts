@@ -36,6 +36,12 @@ export interface PermissionWorkspaceSelection {
 export const permissionWorkspaceSelection: PermissionWorkspaceSelection = {
   business: [],
   settings: [
+    { id: 'release-apps', actions: ['read', 'create', 'update'] },
+    {
+      id: 'release-requests',
+      actions: ['read', 'submit', 'review', 'register'],
+    },
+    { id: 'release-workflows', actions: ['read'] },
     {
       id: 'authorization.permission-sets',
       actions: ['read', 'create', 'update'],

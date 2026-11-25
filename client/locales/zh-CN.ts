@@ -8,6 +8,14 @@ const zhCN: AppResource = {
   ...systemZhCN,
   ...fileUi,
   releaseRequests: {
+    duplicate: '此应用已有待审核或待上线的申请，请先处理已有申请。',
+    disabled: '只有已启用应用可以申请上线。',
+    permissions: {
+      read: '查看记录',
+      submit: '申请上线',
+      review: '审核申请',
+      register: '登记上线结果',
+    },
     title: '上线记录',
     submit: '申请上线',
     detail: '上线申请详情',

@@ -11,7 +11,7 @@ export default function DefinitionPage() {
   return (
     <>
       <PageHeader title={t('releaseRequests.process')} />
-      <SettingsError error={request.error} />
+      <SettingsError error={request.error} retry={request.reload} />
       {request.loading ? (
         <SettingsLoading />
       ) : (

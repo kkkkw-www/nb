@@ -1,5 +1,9 @@
 import { useState } from 'react';
-import { useApiClient, useSubmission } from '@nocobase/app-client';
+import {
+  ApiClientError,
+  useApiClient,
+  useSubmission,
+} from '@nocobase/app-client';
 import { useAuthentication } from '@nocobase/app-plugin-authentication/client';
 import { useTranslation } from '@nocobase/i18n/client';
 import {
@@ -98,6 +102,18 @@ export default function CreateRequest() {
         id='release-request-create'
         onSubmit={save}
         error={error}
+        errorContent={
+          error instanceof ApiClientError &&
+          ['ACTIVE_RELEASE_REQUEST', 'APP_NOT_ENABLED'].includes(
+            error.reason ?? '',
+          )
+            ? t(
+                error.reason === 'ACTIVE_RELEASE_REQUEST'
+                  ? 'releaseRequests.duplicate'
+                  : 'releaseRequests.disabled',
+              )
+            : undefined
+        }
         submitting={submission.submitting}
         values={() => ({ appId, description })}
         savedValues={initial}
@@ -113,7 +129,7 @@ export default function CreateRequest() {
               setPage(1);
             }}
           />
-          <SettingsError error={request.error} />
+          <SettingsError error={request.error} retry={request.reload} />
           <Select
             items={items}
             value={appId}

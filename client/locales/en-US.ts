@@ -10,6 +10,15 @@ const enUS = {
   ...systemEnUS,
   ...fileUi,
   releaseRequests: {
+    duplicate:
+      'This application already has a request awaiting review or release.',
+    disabled: 'Only enabled applications can be requested.',
+    permissions: {
+      read: 'View records',
+      submit: 'Request release',
+      review: 'Review requests',
+      register: 'Register release results',
+    },
     title: 'Release records',
     submit: 'Request release',
     detail: 'Release request',

@@ -194,7 +194,7 @@ export default function RequestDetailPage() {
         search: location.search,
       }}
     >
-      <SettingsError error={request.error} />
+      <SettingsError error={request.error} retry={request.reload} />
       {request.loading ? (
         <SettingsLoading />
       ) : record && detail ? (

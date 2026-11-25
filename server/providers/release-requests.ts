@@ -238,7 +238,10 @@ export default class ReleaseRequestsProvider extends ServiceProvider<Application
               : 'releaseRequests.workflows',
           ns: 'nb',
         },
-        actions: actions.map((name) => ({ name })),
+        actions: actions.map((name) => ({
+          name,
+          title: { key: `releaseRequests.permissions.${name}`, ns: 'nb' },
+        })),
       });
       authz.ui.place(
         { type: 'settings', id },

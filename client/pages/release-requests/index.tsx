@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { resolveListState } from '@nocobase/app-client';
 import { useCan } from '@nocobase/app-plugin-authorization/client';
 import { useTranslation } from '@nocobase/i18n/client';
@@ -110,26 +111,31 @@ export default function ReleaseRequestsPage() {
     })),
   ];
   const clear = () => setParams(new URLSearchParams());
+  const Container = workflow ? Fragment : PageContainer;
   return (
     <>
-      <PageContainer>
-        <PageHeader
-          title={t(
-            workflow ? 'releaseRequests.executions' : 'releaseRequests.title',
-          )}
-          actions={
-            !workflow && canSubmit ? (
-              <Button
-                nativeButton={false}
-                render={
-                  <Link to={{ pathname: 'create', search: location.search }} />
-                }
-              >
-                {t('releaseRequests.submit')}
-              </Button>
-            ) : undefined
-          }
-        />
+      <Container>
+        {!workflow && (
+          <PageHeader
+            title={t(
+              workflow ? 'releaseRequests.executions' : 'releaseRequests.title',
+            )}
+            actions={
+              !workflow && canSubmit ? (
+                <Button
+                  nativeButton={false}
+                  render={
+                    <Link
+                      to={{ pathname: 'create', search: location.search }}
+                    />
+                  }
+                >
+                  {t('releaseRequests.submit')}
+                </Button>
+              ) : undefined
+            }
+          />
+        )}
         <div className='flex flex-wrap gap-2'>
           <Select
             items={items}
@@ -197,7 +203,7 @@ export default function ReleaseRequestsPage() {
             </div>
           )}
         />
-      </PageContainer>
+      </Container>
       <Outlet context={{ reload: request.reload }} />
     </>
   );
