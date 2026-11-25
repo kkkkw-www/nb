@@ -217,6 +217,14 @@ export default function ReleaseAppsPage(): ReactElement {
   });
   const canCreate = useReleaseAppPermission('create');
   const canUpdate = useReleaseAppPermission('update');
+  const canViewRequests = useCan({
+    resource: { type: 'settings', id: 'release-requests' },
+    action: 'read',
+  }).can;
+  const canSubmitRequests = useCan({
+    resource: { type: 'settings', id: 'release-requests' },
+    action: 'submit',
+  }).can;
   const rows = request.data?.data ?? [];
   const filtered = Boolean(params.get('q')) || status !== 'all';
   const listState = resolveListState(
@@ -294,6 +302,32 @@ export default function ReleaseAppsPage(): ReactElement {
           </span>
         ),
       },
+      ...(canViewRequests
+        ? [
+            {
+              id: 'requests',
+              header: t('releaseRequests.title'),
+              cell: ({ row }) => (
+                <div className='flex flex-wrap gap-2'>
+                  <Link
+                    className='underline'
+                    to={`/release-requests?appId=${encodeURIComponent(row.original.id)}`}
+                  >
+                    {t('releaseRequests.records')}
+                  </Link>
+                  {canSubmitRequests && row.original.enabled && (
+                    <Link
+                      className='underline'
+                      to={`/release-requests/create?appId=${encodeURIComponent(row.original.id)}`}
+                    >
+                      {t('releaseRequests.submit')}
+                    </Link>
+                  )}
+                </div>
+              ),
+            } satisfies ColumnDef<ReleaseApp>,
+          ]
+        : []),
       ...(canUpdate
         ? [
             {
@@ -309,7 +343,7 @@ export default function ReleaseAppsPage(): ReactElement {
           ]
         : []),
     ],
-    [t, canUpdate, reload],
+    [t, canUpdate, canViewRequests, canSubmitRequests, reload],
   );
   const create =
     canCreate &&

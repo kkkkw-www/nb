@@ -1,3 +1,4 @@
+import releaseRequestRoutes from './pages/release-requests/routes.js';
 import databaseExplorerRoutes from './pages/settings/database-explorer/routes.js';
 import agentsManagementRoutes from './pages/agents/routes.js';
 import { createAppClientConfig } from '@nocobase/app-client';
@@ -81,6 +82,7 @@ export function createApplicationRoutes(
   return includeNotificationTemplateRoutes(
     [
       appRoutes,
+      releaseRequestRoutes,
       settingsShellRoutes,
       systemSettingsRoutes,
       releaseAppsRoutes,
