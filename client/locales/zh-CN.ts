@@ -100,6 +100,10 @@ const zhCN: AppResource = {
       from: '来源状态',
     },
   },
+  automationTesting: {
+    title: '自动化测试平台',
+    description: '进入自动化测试平台。',
+  },
   releaseApps: {
     title: '应用管理',
     description: '维护可提交上线申请的应用；应用只停用，不删除。',

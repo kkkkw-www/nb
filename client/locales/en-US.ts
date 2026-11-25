@@ -104,6 +104,10 @@ const enUS = {
       from: 'From',
     },
   },
+  automationTesting: {
+    title: 'Automation testing platform',
+    description: 'Open the automation testing platform.',
+  },
   releaseApps: {
     title: 'Applications',
     description:
