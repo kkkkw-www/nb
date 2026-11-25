@@ -107,7 +107,7 @@ const zhCN: AppResource = {
     deletedSuccess: '已删除应用“{{name}}”',
     alreadyDeleted: '应用“{{name}}”已被删除。',
     title: '应用管理',
-    description: '维护可提交上线申请的应用；应用只停用，不删除。',
+    description: '维护可提交上线申请的应用。',
     askAi: 'AI 对话',
     create: '新建应用',
     edit: '编辑应用',

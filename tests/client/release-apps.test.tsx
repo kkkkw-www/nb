@@ -4,7 +4,7 @@ import {
   AuthorizationClient,
   authorizationClientToken,
 } from '@nocobase/app-plugin-authorization/client';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router';
 import { expect, it, vi } from 'vitest';
@@ -15,6 +15,8 @@ import type { ReleaseApp } from '../../client/pages/settings/release-apps/client
 import enUS from '../../client/locales/en-US.js';
 import zhCN from '../../client/locales/zh-CN.js';
 import { renderSettingsClient as renderWithApp } from '../helpers/settings-client.js';
+
+import { renderAuthenticatedClient } from '../helpers/authenticated-client.js';
 
 const namespace = '@nocobase/release-apps-test';
 const namespaces = {
@@ -168,4 +170,120 @@ it('shows a duplicate name beside the field', async () => {
   expect(
     within(dialog).getByRole('textbox', { name: /Application name/ }),
   ).toHaveAttribute('aria-invalid', 'true');
+});
+
+it('cancels without writing, retains the row after failure, then deletes and persists the result', async () => {
+  const user = userEvent.setup();
+  let deletes = 0;
+  const { session } = await renderAuthenticatedClient(pages(), {
+    route: '/settings/release-apps',
+    prepare: async (_server, admin) => {
+      const response = await admin.fetch('/releaseApps', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          origin: 'http://localhost',
+          'Idempotency-Key': `${Date.now()}.${crypto.randomUUID()}`,
+        },
+        body: JSON.stringify({ name: 'Delete me' }),
+      });
+      expect(response.status).toBe(201);
+    },
+    beforeRequest: (request) => {
+      if (request.method === 'DELETE') {
+        deletes++;
+        if (deletes === 1) throw new TypeError('Synthetic network failure');
+      }
+    },
+  });
+  await screen.findByText('Delete me');
+  const edit = await screen.findByText('Edit', { exact: true });
+  const remove = screen.getByRole('button', { name: 'Delete', exact: true });
+  expect(edit.nextElementSibling).toBe(remove);
+  await user.click(remove);
+  let dialog = await screen.findByRole('alertdialog');
+  expect(
+    within(dialog).getByRole('heading', { name: 'Delete “Delete me”?' }),
+  ).toBeVisible();
+  await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+  await waitFor(() =>
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument(),
+  );
+  expect(deletes).toBe(0);
+  expect(screen.getByText('Delete me')).toBeVisible();
+  await user.click(remove);
+  dialog = await screen.findByRole('alertdialog');
+  await user.click(
+    within(dialog).getByRole('button', { name: 'Delete', exact: true }),
+  );
+  expect(await within(dialog).findByRole('alert')).toBeVisible();
+  expect(screen.getByText('Delete me')).toBeVisible();
+  expect(
+    (await (await session.fetch('/releaseApps')).json()).data,
+  ).toHaveLength(1);
+  await user.click(
+    within(dialog).getByRole('button', { name: 'Delete', exact: true }),
+  );
+  await waitFor(() =>
+    expect(
+      screen.queryByText('Delete me', { exact: true }),
+    ).not.toBeInTheDocument(),
+  );
+  expect(
+    await screen.findByText('Deleted application “Delete me”'),
+  ).toBeVisible();
+  expect(
+    (await (await session.fetch('/releaseApps')).json()).data,
+  ).toHaveLength(0);
+  expect(
+    screen.getByRole('textbox', { name: 'Search name, code or owner' }),
+  ).toHaveFocus();
+});
+
+it('hides deletion for a read-only user and rejects a direct delete', async () => {
+  const user = userEvent.setup();
+  let id = '';
+  const { session } = await renderAuthenticatedClient(pages(), {
+    member: true,
+    route: '/settings/release-apps',
+    grants: [
+      {
+        resource: { type: 'settings', id: 'release-apps' },
+        actions: [{ action: 'read' }],
+      },
+    ],
+    prepare: async (server) => {
+      const { signIn, DEFAULT_ADMIN_CREDENTIALS } =
+        await import('@nocobase/app-plugin-authentication/testing');
+      const admin = await signIn(server, DEFAULT_ADMIN_CREDENTIALS);
+      const response = await admin.fetch('/releaseApps', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          origin: 'http://localhost',
+          'Idempotency-Key': `${Date.now()}.${crypto.randomUUID()}`,
+        },
+        body: JSON.stringify({ name: 'Read only application' }),
+      });
+      id = (await response.json()).data.id;
+    },
+  });
+  await screen.findByText('Read only application');
+  await user.click(
+    screen.getByRole('textbox', { name: 'Search name, code or owner' }),
+  );
+  expect(
+    screen.queryByRole('button', { name: 'Delete', exact: true }),
+  ).not.toBeInTheDocument();
+  const response = await session.fetch(`/releaseApps/${id}`, {
+    method: 'DELETE',
+    headers: {
+      origin: 'http://localhost',
+      'Idempotency-Key': `${Date.now()}.${crypto.randomUUID()}`,
+    },
+  });
+  expect(response.status).toBe(403);
+  expect(
+    (await (await session.fetch('/releaseApps')).json()).data,
+  ).toHaveLength(1);
 });

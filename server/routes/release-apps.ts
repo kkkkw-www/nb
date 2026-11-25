@@ -225,7 +225,7 @@ export const releaseAppsRoutes: AppApiRouteContribution<Application> =
           'Delete a release application without deleting release history',
         operationId: 'deleteReleaseApp',
         responses: {
-          200: dataResponse(z.object({ id: z.string() })),
+          204: { description: 'Application deleted' },
           404: apiErrorResponse(404),
           ...apiErrorResponses,
         },
@@ -247,7 +247,7 @@ export const releaseAppsRoutes: AppApiRouteContribution<Application> =
           execute: (transaction) => service.delete(transaction, id),
         });
         context.header('Idempotency-Replayed', String(result.replayed));
-        return context.json({ data: result.data });
+        return context.body(null, 204);
       },
     );
 

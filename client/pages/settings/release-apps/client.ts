@@ -39,14 +39,14 @@ export class ReleaseAppsClient {
     id: string,
     idempotencyKey: string,
     signal?: AbortSignal,
-  ): Promise<{ id: string }> {
-    const response = await this.api.request<{ data: { id: string } }>({
+  ): Promise<true> {
+    await this.api.request<void>({
       path: `releaseApps/${encodeURIComponent(id)}`,
       method: 'DELETE',
       headers: { 'Idempotency-Key': idempotencyKey },
       signal,
     });
-    return response.data;
+    return true;
   }
 
   async update(

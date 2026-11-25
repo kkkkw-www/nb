@@ -3,10 +3,10 @@ import {
   ApiClientError,
   resolveListState,
   useApiClient,
-  useAuth,
   useSubmission,
   useToaster,
 } from '@nocobase/app-client';
+import { useAuthentication } from '@nocobase/app-plugin-authentication/client';
 import { useCan } from '@nocobase/app-plugin-authorization/client';
 import { useChatPanel } from '@nocobase/app-plugin-agents/client/chat';
 import { useTranslation } from '@nocobase/i18n/client';
@@ -60,10 +60,10 @@ function ReleaseAppActions({
   const location = useLocation();
   const client = useMemo(() => new ReleaseAppsClient(api), [api]);
   const canUpdate = useReleaseAppPermission('update');
-  const { user } = useAuth();
+  const { session } = useAuthentication();
   const [deleting, setDeleting] = useState(false);
   const deletion = useSubmission({
-    scope: `${user?.id}:releaseApps:${app.id}:delete`,
+    scope: `${session?.user.id}:releaseApps:${app.id}:delete`,
   });
   const [deleteError, setDeleteError] = useState<unknown>();
   const remove = async () => {
