@@ -1,7 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import {
+  ApiClientError,
   resolveListState,
   useApiClient,
+  useAuth,
   useSubmission,
   useToaster,
 } from '@nocobase/app-client';
@@ -9,7 +11,7 @@ import { useCan } from '@nocobase/app-plugin-authorization/client';
 import { useChatPanel } from '@nocobase/app-plugin-agents/client/chat';
 import { useTranslation } from '@nocobase/i18n/client';
 import { BotMessageSquareIcon, PlusIcon } from 'lucide-react';
-import { useEffect, useMemo, useState, type ReactElement } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 
 import { DataTable } from '#components/data-table';
@@ -46,9 +48,11 @@ function useReleaseAppPermission(action: 'read' | 'create' | 'update') {
 function ReleaseAppActions({
   app,
   reload,
+  afterDelete,
 }: {
   readonly app: ReleaseApp;
   readonly reload: () => void;
+  readonly afterDelete: () => void;
 }): ReactElement | null {
   const { t } = useTranslation();
   const api = useApiClient();
@@ -56,6 +60,37 @@ function ReleaseAppActions({
   const location = useLocation();
   const client = useMemo(() => new ReleaseAppsClient(api), [api]);
   const canUpdate = useReleaseAppPermission('update');
+  const { user } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+  const deletion = useSubmission({
+    scope: `${user?.id}:releaseApps:${app.id}:delete`,
+  });
+  const [deleteError, setDeleteError] = useState<unknown>();
+  const remove = async () => {
+    setDeleteError(undefined);
+    try {
+      const result = await deletion.run({ id: app.id }, (key, signal) =>
+        client.delete(app.id, key, signal),
+      );
+      if (!result) return;
+      toaster.show({
+        type: 'success',
+        title: t('releaseApps.deletedSuccess', { name: app.name }),
+      });
+    } catch (next) {
+      if (!(next instanceof ApiClientError && next.status === 404)) {
+        setDeleteError(next);
+        return;
+      }
+      toaster.show({
+        type: 'info',
+        title: t('releaseApps.alreadyDeleted', { name: app.name }),
+      });
+    }
+    setDeleting(false);
+    afterDelete();
+    reload();
+  };
   const [enabled, setEnabled] = useState<boolean>();
   const [requestBusy, setRequestBusy] = useState(false);
   const [error, setError] = useState<unknown>();
@@ -94,6 +129,7 @@ function ReleaseAppActions({
     <>
       <RowActions
         label={t('releaseApps.actionsFor', { name: app.name })}
+        exposed={['edit', 'delete']}
         actions={[
           {
             key: 'edit',
@@ -108,6 +144,16 @@ function ReleaseAppActions({
             ),
           },
           {
+            key: 'delete',
+            label: t('releaseApps.delete'),
+            destructive: true,
+            disabled: busy || deletion.submitting,
+            onClick: () => {
+              setDeleteError(undefined);
+              setDeleting(true);
+            },
+          },
+          {
             key: 'toggle',
             label: t(
               app.enabled ? 'releaseApps.disable' : 'releaseApps.enable',
@@ -115,6 +161,16 @@ function ReleaseAppActions({
             onClick: () => setEnabled(!app.enabled),
           },
         ]}
+      />
+      <ConfirmAction
+        open={deleting}
+        title={t('releaseApps.deleteTitle', { name: app.name })}
+        description={t('releaseApps.deleteHint')}
+        error={<SettingsError error={deleteError} />}
+        confirmLabel={t('releaseApps.delete')}
+        busy={deletion.submitting}
+        onCancel={() => setDeleting(false)}
+        onConfirm={() => void remove()}
       />
       <ConfirmAction
         open={enabled !== undefined}
@@ -144,6 +200,7 @@ function ReleaseAppActions({
 export default function ReleaseAppsPage(): ReactElement {
   const { t } = useTranslation();
   const chat = useChatPanel();
+  const searchRef = useRef<HTMLInputElement>(null);
   const { params, setParams, active } = useListLocation();
   const location = useLocation();
   const [queryDraft, setQueryDraft] = useState<{
@@ -337,7 +394,11 @@ export default function ReleaseAppsPage(): ReactElement {
               ),
               enableSorting: false,
               cell: ({ row }) => (
-                <ReleaseAppActions app={row.original} reload={reload} />
+                <ReleaseAppActions
+                  app={row.original}
+                  reload={reload}
+                  afterDelete={() => searchRef.current?.focus()}
+                />
               ),
             } satisfies ColumnDef<ReleaseApp>,
           ]
@@ -384,6 +445,7 @@ export default function ReleaseAppsPage(): ReactElement {
         />
         <div className='flex flex-wrap items-center gap-3'>
           <Input
+            ref={searchRef}
             className='w-full sm:max-w-xs'
             value={query}
             aria-label={t('releaseApps.search')}

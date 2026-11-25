@@ -101,6 +101,11 @@ const zhCN: AppResource = {
     },
   },
   releaseApps: {
+    delete: '删除',
+    deleteTitle: '删除“{{name}}”？',
+    deleteHint: '此操作无法撤销，历史上线记录将保留。',
+    deletedSuccess: '已删除应用“{{name}}”',
+    alreadyDeleted: '应用“{{name}}”已被删除。',
     title: '应用管理',
     description: '维护可提交上线申请的应用；应用只停用，不删除。',
     askAi: 'AI 对话',

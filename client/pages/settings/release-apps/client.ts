@@ -35,6 +35,20 @@ export class ReleaseAppsClient {
     return response.data;
   }
 
+  async delete(
+    id: string,
+    idempotencyKey: string,
+    signal?: AbortSignal,
+  ): Promise<{ id: string }> {
+    const response = await this.api.request<{ data: { id: string } }>({
+      path: `releaseApps/${encodeURIComponent(id)}`,
+      method: 'DELETE',
+      headers: { 'Idempotency-Key': idempotencyKey },
+      signal,
+    });
+    return response.data;
+  }
+
   async update(
     id: string,
     input: ReleaseAppInput,

@@ -235,6 +235,18 @@ export class ReleaseAppsService {
     }
   }
 
+  async delete(
+    connection: DatabaseConnection,
+    id: string,
+  ): Promise<{ id: string }> {
+    const repository = connection.repository<ReleaseAppRecord>('releaseApps');
+    const current = await repository.findOne({ filter: { id } });
+    if (!current) throw notFound(id);
+    // Release requests retain their application-name snapshot; never cascade history.
+    await repository.deleteOne({ filter: { id } });
+    return { id };
+  }
+
   private async ensureAvailable(
     connection: DatabaseConnection,
     values: { name: string; code: string | null },

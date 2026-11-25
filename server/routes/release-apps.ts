@@ -217,6 +217,40 @@ export const releaseAppsRoutes: AppApiRouteContribution<Application> =
       },
     );
 
+    router.delete(
+      '/:id',
+      describeRoute({
+        tags: ['Release applications'],
+        summary:
+          'Delete a release application without deleting release history',
+        operationId: 'deleteReleaseApp',
+        responses: {
+          200: dataResponse(z.object({ id: z.string() })),
+          404: apiErrorResponse(404),
+          ...apiErrorResponses,
+        },
+      }),
+      apiValidator('param', IdParams),
+      apiValidator('header', IdempotencyHeader),
+      async (context) => {
+        await requirePermission(context.get('authz'), 'update');
+        const user = context.get('auth') as { user: { id: string } };
+        const { id } = context.req.valid('param');
+        const result = await executeIdempotentMutation({
+          connection: database.connection(),
+          key: context.req.valid('header')['idempotency-key'],
+          principal: user.user.id,
+          operation: `releaseApps/${id}/delete`,
+          input: { id },
+          authorize: () => requirePermission(context.get('authz'), 'update'),
+          authorizeReplay: async () => undefined,
+          execute: (transaction) => service.delete(transaction, id),
+        });
+        context.header('Idempotency-Replayed', String(result.replayed));
+        return context.json({ data: result.data });
+      },
+    );
+
     return new Hono().route('/releaseApps', router);
   });
 
