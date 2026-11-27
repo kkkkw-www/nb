@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 // @vitest-environment node
-import { expect } from 'vitest';
+import { expect, vi } from 'vitest';
+import { authorizationToken } from '@nocobase/app-plugin-authorization/server';
+import { releaseAppsServiceToken } from '../../server/providers/release-apps.js';
 import { createAppTest } from '@nocobase/app-testing/server';
 import {
   DEFAULT_ADMIN_CREDENTIALS,
@@ -126,5 +128,126 @@ test('manages release applications with unique names and codes', async ({
         json({ name: 'Member app', code: 'member-app' }),
       )
     ).status,
+  ).toBe(403);
+});
+
+test('deletes only applications, checks update grants, and safely replays deletion', async ({
+  testApp,
+  connection,
+}) => {
+  const admin = await signIn(testApp, DEFAULT_ADMIN_CREDENTIALS);
+  const app = (
+    await (
+      await admin.fetch('/releaseApps', json({ name: 'Delete target' }))
+    ).json()
+  ).data;
+  const path = `/releaseApps/${app.id}`;
+  const deletion = () => ({
+    method: 'DELETE',
+    headers: { origin: 'http://localhost', 'Idempotency-Key': operationKey() },
+  });
+  expect((await testApp.request(path, deletion())).status).toBe(401);
+  const email = `delete-reader-${randomUUID()}@example.test`;
+  const password = 'Delete-reader-123!';
+  await testApp.request(
+    '/auth/sign-up/email',
+    json({ name: 'Reader', email, password }),
+  );
+  const reader = await signIn(testApp, { email, password });
+  const authz = testApp.application.container.resolve(authorizationToken);
+  const key = `delete-reader-${randomUUID()}`;
+  await authz.permissionSets.create({
+    key,
+    grants: [
+      {
+        resource: { type: 'settings', id: 'release-apps' },
+        actions: [{ action: 'read' }],
+      },
+    ],
+  });
+  await authz.permissionSets.assign({
+    id: randomUUID(),
+    permissionSet: key,
+    subject: { type: 'user', id: reader.user.id },
+  });
+  expect((await reader.fetch('/releaseApps')).status).toBe(200);
+  expect((await reader.fetch(path, deletion())).status).toBe(403);
+  expect((await admin.fetch(path)).status).toBe(200);
+
+  const request = await admin.fetch(
+    '/releaseRequests',
+    json({ appId: app.id, description: 'Retain this history' }),
+  );
+  expect(request.status).toBe(201);
+  const record = (await request.json()).data;
+  const service = testApp.application.container.resolve(
+    releaseAppsServiceToken,
+  );
+  const failure = vi
+    .spyOn(service, 'delete')
+    .mockImplementationOnce(async (transaction, id) => {
+      await transaction.repository('releaseApps').deleteOne({ filter: { id } });
+      throw new Error('Synthetic transaction failure');
+    });
+  expect((await admin.fetch(path, deletion())).status).toBe(500);
+  failure.mockRestore();
+  expect((await admin.fetch(path)).status).toBe(200);
+  expect(
+    await connection
+      .repository('releaseApps')
+      .findOne({ filter: { id: app.id } }),
+  ).toBeTruthy();
+
+  const options = deletion();
+  expect((await admin.fetch(path, options)).status).toBe(204);
+  const replay = await admin.fetch(path, options);
+  expect(replay.status).toBe(204);
+  expect(replay.headers.get('idempotency-replayed')).toBe('true');
+  expect((await admin.fetch(path)).status).toBe(404);
+  expect((await admin.fetch(path, deletion())).status).toBe(404);
+  expect(
+    (await (await admin.fetch('/releaseApps')).json()).data,
+  ).not.toContainEqual(expect.objectContaining({ id: app.id }));
+  const retained = await admin.fetch(`/releaseRequests/${record.id}`);
+  expect(retained.status).toBe(200);
+  expect((await retained.json()).data.record).toMatchObject({
+    appId: app.id,
+    appName: app.name,
+  });
+  const spec = await (await admin.fetch('/swagger')).json();
+  expect(spec.paths['/api/releaseApps/{id}'].delete.operationId).toBe(
+    'deleteReleaseApp',
+  );
+
+  const updateOnly = `delete-update-${randomUUID()}`;
+  await authz.permissionSets.create({
+    key: updateOnly,
+    grants: [
+      {
+        resource: { type: 'settings', id: 'release-apps' },
+        actions: [{ action: 'update' }],
+      },
+    ],
+  });
+  await authz.permissionSets.assign({
+    id: randomUUID(),
+    permissionSet: updateOnly,
+    subject: { type: 'user', id: reader.user.id },
+  });
+  const second = (
+    await (
+      await admin.fetch('/releaseApps', json({ name: 'Update grant target' }))
+    ).json()
+  ).data;
+  const secondOptions = deletion();
+  expect(
+    (await reader.fetch(`/releaseApps/${second.id}`, secondOptions)).status,
+  ).toBe(204);
+  await authz.permissionSets.update(updateOnly, {
+    key: updateOnly,
+    grants: [],
+  });
+  expect(
+    (await reader.fetch(`/releaseApps/${second.id}`, secondOptions)).status,
   ).toBe(403);
 });

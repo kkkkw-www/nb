@@ -105,9 +105,14 @@ const enUS = {
     },
   },
   releaseApps: {
+    delete: 'Delete',
+    deleteTitle: 'Delete “{{name}}”?',
+    deleteHint:
+      'This cannot be undone. Existing release records will be preserved.',
+    deletedSuccess: 'Deleted application “{{name}}”',
+    alreadyDeleted: 'Application “{{name}}” has already been deleted.',
     title: 'Applications',
-    description:
-      'Maintain the applications available for release requests. Applications are disabled, never deleted.',
+    description: 'Maintain the applications available for release requests.',
     askAi: 'AI chat',
     create: 'New application',
     edit: 'Edit application',
