@@ -100,6 +100,10 @@ const zhCN: AppResource = {
       from: '来源状态',
     },
   },
+  automationTesting: {
+    title: '自动化测试平台',
+    description: '进入自动化测试平台。',
+  },
   releaseApps: {
     delete: '删除',
     deleteTitle: '删除“{{name}}”？',

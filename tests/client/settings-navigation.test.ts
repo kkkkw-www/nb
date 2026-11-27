@@ -219,6 +219,21 @@ describe('System settings navigation', () => {
     ]).routes;
     expect(catalog(routes)).toEqual([
       [
+        'settingsAccount',
+        [
+          ['settingsUsers', '/settings/users'],
+          ['permissionManagement', '/settings/roles'],
+        ],
+      ],
+      [
+        'settingsBusiness',
+        [
+          ['releaseWorkflows', '/settings/workflows'],
+          ['settingsReleaseApps', '/settings/release-apps'],
+          ['settingsAutomationTesting', '/settings/automation-testing'],
+        ],
+      ],
+      [
         'settingsSystem',
         [
           ['notificationManagement', '/settings/notifications/templates'],
@@ -228,7 +243,7 @@ describe('System settings navigation', () => {
     ]);
     expect(
       buildRouteNavigation(routes, new Set()).map(({ route }) => route.name),
-    ).toEqual(['home', 'settingsHome']);
+    ).toEqual(['home', 'releaseRequests', 'agentManagement', 'settingsHome']);
   });
 });
 
@@ -248,7 +263,26 @@ it('places database browsing in System and hides its card when access is denied'
     action: 'access',
   });
   expect(catalog(routes)).toEqual([
+    [
+      'settingsAccount',
+      [
+        ['settingsUsers', '/settings/users'],
+        ['permissionManagement', '/settings/roles'],
+      ],
+    ],
+    [
+      'settingsBusiness',
+      [
+        ['releaseWorkflows', '/settings/workflows'],
+        ['settingsReleaseApps', '/settings/release-apps'],
+        ['settingsAutomationTesting', '/settings/automation-testing'],
+      ],
+    ],
     ['settingsSystem', [['databaseExplorer', '/settings/database-explorer']]],
   ]);
-  expect(catalog(routes, new Set([routeKey(page)]))).toEqual([]);
+  expect(
+    catalog(routes, new Set([routeKey(page)])).filter(
+      ([name]) => name === 'settingsSystem',
+    ),
+  ).toEqual([]);
 });

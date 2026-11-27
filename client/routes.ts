@@ -4,6 +4,7 @@ import agentsManagementRoutes from './pages/agents/routes.js';
 import { createAppClientConfig } from '@nocobase/app-client';
 import { readAppClientRuntimeConfig } from '@nocobase/app-client/runtime';
 import { includeNotificationTemplateRoutes } from './pages/settings/notification-routes.js';
+import automationTestingRoutes from './pages/settings/automation-testing/routes.js';
 import releaseAppsRoutes from './pages/settings/release-apps/routes.js';
 import { Home } from 'lucide-react';
 import settingsShellRoutes from './pages/settings/shell-routes.js';
@@ -86,6 +87,7 @@ export function createApplicationRoutes(
       settingsShellRoutes,
       systemSettingsRoutes,
       releaseAppsRoutes,
+      automationTestingRoutes,
       databaseExplorerRoutes,
       agentsManagementRoutes,
     ],

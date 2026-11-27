@@ -42,6 +42,7 @@ export const permissionWorkspaceSelection: PermissionWorkspaceSelection = {
       actions: ['read', 'submit', 'review', 'register'],
     },
     { id: 'release-workflows', actions: ['read'] },
+    { id: 'automation-testing', actions: ['read'] },
     {
       id: 'authorization.permission-sets',
       actions: ['read', 'create', 'update'],

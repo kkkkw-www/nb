@@ -188,6 +188,15 @@ describe('app client routes', () => {
     expect(pageAuthorizations(resolved.routes)).toEqual([
       { name: 'home', authorizedAs: null },
       { name: 'inbox', authorizedAs: null },
+      { name: 'releaseRequests', authorizedAs: 'settings:release-requests' },
+      {
+        name: 'releaseRequestCreate',
+        authorizedAs: 'settings:release-requests',
+      },
+      {
+        name: 'releaseRequestDetail',
+        authorizedAs: 'settings:release-requests',
+      },
       { name: 'agents', authorizedAs: 'agents' },
       { name: 'runtimes', authorizedAs: 'runtimes' },
       { name: 'runtimes-connect', authorizedAs: 'runtimes' },
@@ -221,6 +230,23 @@ describe('app client routes', () => {
         name,
         authorizedAs: 'settings:authorization.default-access',
       })),
+      { name: 'releaseWorkflows', authorizedAs: 'settings:release-workflows' },
+      {
+        name: 'releaseWorkflowDefinitions',
+        authorizedAs: 'settings:release-workflows',
+      },
+      {
+        name: 'releaseWorkflowDefinition',
+        authorizedAs: 'settings:release-workflows',
+      },
+      {
+        name: 'releaseWorkflowExecutions',
+        authorizedAs: 'settings:release-workflows',
+      },
+      {
+        name: 'releaseWorkflowExecution',
+        authorizedAs: 'settings:release-workflows',
+      },
       { name: 'settingsReleaseApps', authorizedAs: 'settings:release-apps' },
       {
         name: 'settingsReleaseAppCreate',
@@ -229,6 +255,10 @@ describe('app client routes', () => {
       {
         name: 'settingsReleaseAppEdit',
         authorizedAs: 'settings:release-apps',
+      },
+      {
+        name: 'settingsAutomationTesting',
+        authorizedAs: 'settings:automation-testing',
       },
       { name: 'databaseExplorer', authorizedAs: 'database-explorer' },
     ]);
@@ -252,9 +282,15 @@ describe('app client routes', () => {
       '/settings/default-access',
       '/settings/default-access/create',
       '/settings/default-access/:key/edit',
+      '/settings/workflows',
+      '/settings/workflows/definitions',
+      '/settings/workflows/definitions/release',
+      '/settings/workflows/executions',
+      '/settings/workflows/executions/:id',
       '/settings/release-apps',
       '/settings/release-apps/create',
       '/settings/release-apps/:appId/edit',
+      '/settings/automation-testing',
       '/settings/database-explorer',
     ]);
     const built = resolveAppClientContributions([
@@ -267,6 +303,15 @@ describe('app client routes', () => {
     expect(pageAuthorizations(built.routes)).toEqual([
       { name: 'home', authorizedAs: null },
       { name: 'inbox', authorizedAs: null },
+      { name: 'releaseRequests', authorizedAs: 'settings:release-requests' },
+      {
+        name: 'releaseRequestCreate',
+        authorizedAs: 'settings:release-requests',
+      },
+      {
+        name: 'releaseRequestDetail',
+        authorizedAs: 'settings:release-requests',
+      },
       { name: 'agents', authorizedAs: 'agents' },
       { name: 'runtimes', authorizedAs: 'runtimes' },
       { name: 'runtimes-connect', authorizedAs: 'runtimes' },
@@ -300,6 +345,23 @@ describe('app client routes', () => {
         name,
         authorizedAs: 'settings:authorization.default-access',
       })),
+      { name: 'releaseWorkflows', authorizedAs: 'settings:release-workflows' },
+      {
+        name: 'releaseWorkflowDefinitions',
+        authorizedAs: 'settings:release-workflows',
+      },
+      {
+        name: 'releaseWorkflowDefinition',
+        authorizedAs: 'settings:release-workflows',
+      },
+      {
+        name: 'releaseWorkflowExecutions',
+        authorizedAs: 'settings:release-workflows',
+      },
+      {
+        name: 'releaseWorkflowExecution',
+        authorizedAs: 'settings:release-workflows',
+      },
       { name: 'settingsReleaseApps', authorizedAs: 'settings:release-apps' },
       {
         name: 'settingsReleaseAppCreate',
@@ -308,6 +370,10 @@ describe('app client routes', () => {
       {
         name: 'settingsReleaseAppEdit',
         authorizedAs: 'settings:release-apps',
+      },
+      {
+        name: 'settingsAutomationTesting',
+        authorizedAs: 'settings:automation-testing',
       },
       { name: 'databaseExplorer', authorizedAs: 'database-explorer' },
     ]);
